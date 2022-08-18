@@ -1,2 +1,2 @@
 You can replace this with whatever you want. What is written in here will show
-up on http://fa21-cs438-01.cs.illinois.edu:8080/queue/queue_mp3.html when you are queued.
+up when you are queued.
