@@ -1,0 +1,19 @@
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+
+int main(int argc, char** argv) {
+    //printf("Number of arguments: %d", argc);
+    if (argc != 2) {
+        printf("Usage: ./csma input.txt\n");
+        return -1;
+    }
+
+    FILE *fpOut;
+    fpOut = fopen("output.txt", "w");
+    fclose(fpOut);
+    
+
+    return 0;
+}
+
