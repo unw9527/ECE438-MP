@@ -1,5 +1,5 @@
 git checkout _grades -q
-git pull
+git pull -q
 echo
 echo '-----------Contents of results.txt-----------------'
 echo
@@ -7,4 +7,4 @@ cat results.txt
 echo
 echo '-----------End of results.txt----------------------'
 echo
-git checkout master -q
+git checkout main -q

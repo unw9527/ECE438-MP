@@ -7,4 +7,4 @@ cat results.txt
 echo
 echo '-----------End of results.txt----------------------'
 echo
-git checkout master -q
+git checkout main -q
