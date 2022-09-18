@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
 				new_buf = new_buf.substr(4);
                 // cout << new_buf << endl;
 				if (new_buf.find(" HTTP") != new_buf.npos) {
-					string path = new_buf.substr(0, new_buf.find(" HTTP"));
-                    // cout << path << endl;
+					string path = new_buf.substr(1, new_buf.find(" HTTP")-1);
+                    cout << path << endl;
 					fp = fopen(path.data(), "rb");
 					if (fp != NULL) new_buf = "HTTP/1.1 200 OK\r\n\r\n";
 					else new_buf = "HTTP/1.1 404 Not Found\r\n\r\n";
