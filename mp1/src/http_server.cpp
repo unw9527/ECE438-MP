@@ -27,7 +27,7 @@ using namespace std;
 
 void sigchld_handler(int s)
 {	
-    s = s;
+    s++;
 	while(waitpid(-1, NULL, WNOHANG) > 0);
 }
 
