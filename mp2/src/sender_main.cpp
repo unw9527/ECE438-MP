@@ -25,8 +25,10 @@
 #include <math.h>
 #include <errno.h>
 #include "param.h"
+#include <cstdio>
 
 using namespace std;
+
 
 struct sockaddr_in si_me, si_other;
 int s, slen;
@@ -66,6 +68,7 @@ void timeout_handler(){
     ssthresh = cwnd / 2;
     ssthresh = max((float)BASE, ssthresh);
     cwnd = BASE;
+    cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
     num_dup = 0;
     send_pkt(&aqueue.front());
@@ -81,6 +84,7 @@ void dup_ack_handler(){
     ssthresh = max((float)BASE, ssthresh);
     cwnd = ssthresh + 3 * BASE;
     cwnd = max((float)BASE, cwnd);
+    cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = FAST_RECOVERY;
     // send_pkt(&aqueue.front());
     if (!aqueue.empty()){
@@ -108,6 +112,7 @@ void state_transition(){
                 }
                 cwnd += BASE;
                 cwnd = max((float)BASE, cwnd);
+                cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case CONGESTION_AVOID:
@@ -119,6 +124,7 @@ void state_transition(){
             else{
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
+                cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
@@ -126,6 +132,7 @@ void state_transition(){
             cwnd = ssthresh;
             cwnd += BASE;
             cwnd = max((float)BASE, cwnd);
+            cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             status = CONGESTION_AVOID;
             break;
         default: 
@@ -214,7 +221,7 @@ void end_connection(){
                 diep("recvfrom()");
             }
             else{
-                // cout << "Timeout. Resend FIN" << endl;
+                cout << "Timeout. Resend FIN" << endl;
                 pkt.pkt_type = FIN;
                 pkt.data_size = 0;
                 memset(pkt.data, 0, BASE);
@@ -293,7 +300,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
                 diep("recvfrom()");
             }
             if (!aqueue.empty()){
-                // cout << "Timeout when sending " << aqueue.front().seq_idx << endl;
+                cout << "Timeout when sending " << aqueue.front().seq_idx << endl;
                 timeout_handler();
             }
         }
@@ -312,6 +319,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 int main(int argc, char** argv) {
     unsigned short int udpPort;
     unsigned long long int numBytes;
+    freopen("output.txt", "w", stdout );
 
     if (argc != 5) {
         fprintf(stderr, "usage: %s receiver_hostname receiver_port filename_to_xfer bytes_to_xfer\n\n", argv[0]);
