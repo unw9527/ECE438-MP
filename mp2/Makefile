@@ -1,5 +1,5 @@
 #If you use threads, add -pthread here.
-COMPILERFLAGS = -g -Wall -Wextra -Wno-sign-compare -std=c++11
+COMPILERFLAGS = -g -Wall -Wextra -Wno-sign-compare
 
 #Any libraries you might need linked in.
 LINKLIBS = -lpthread

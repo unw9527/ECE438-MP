@@ -87,7 +87,7 @@ void dup_ack_handler(){
     cwnd = max((float)BASE, cwnd);
     // cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = FAST_RECOVERY;
-    // send_pkt(&aqueue.front());
+    send_pkt(&aqueue.front());
     if (!aqueue.empty()){
         send_pkt(&aqueue.front());
     }
@@ -166,6 +166,7 @@ void enqueue_and_send(){
         }
     }
     // Send
+    // cout << "dqueue size: " << dqueue.size() << endl;
     while (!dqueue.empty()){
         send_pkt(&dqueue.front());
         num_sent++;
@@ -187,6 +188,12 @@ void ack_handler(packet* pkt){
         // Duplicated ACK
         num_dup++;
         state_transition();
+        if(num_dup >= 3){
+            if(!aqueue.empty()){
+                send_pkt(&aqueue.front());
+            }
+            num_dup = 0;
+        }
     }
     else{
         // New ACK
@@ -214,7 +221,7 @@ void end_connection(){
     pkt.data_size=0;
     memset(pkt.data, 0, BASE);
     send_pkt(&pkt);
-    // cout << "Sending FIN" << endl;
+    cout << "Sending FIN" << endl;
     while (true) {
         slen = sizeof(si_other);
         if (recvfrom(s, temp, sizeof(packet), 0, (struct sockaddr *)&si_other, (socklen_t*)&slen) == -1){
@@ -233,7 +240,7 @@ void end_connection(){
             packet ack;
             memcpy(&ack, temp, sizeof(packet));
             if (ack.pkt_type == FINACK){
-                // cout << "Received FINACK" << endl;
+                cout << "Received FINACK" << endl;
                 pkt.pkt_type = FINACK;
                 pkt.data_size = 0;
                 send_pkt(&pkt);
@@ -295,7 +302,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     /* Send data and receive acknowledgements on s */
     packet pkt;
     enqueue_and_send();
-    while (num_sent < num_total_pkt || num_received < num_sent){
+    while (num_sent < num_total_pkt || num_received < num_sent - 2){
+        cout << "num_sent: " << num_sent << " num_total: " << num_total_pkt << " num_received: " << num_received << endl;
         if ((recvfrom(s, &pkt, sizeof(packet), 0, NULL, NULL)) == -1){
             if (errno != EAGAIN || errno != EWOULDBLOCK) {
                 diep("recvfrom()");
@@ -303,6 +311,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
             if (!aqueue.empty()){
                 // cout << "Timeout when sending " << aqueue.front().seq_idx << endl;
                 timeout_handler();
+                send_pkt(&aqueue.front());
             }
         }
         else{

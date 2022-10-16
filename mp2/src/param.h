@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #define MSS             1000
-#define BASE            1500
-#define MAX_QUEUE_SIZE  1500
-#define TIMEOUT         100000
+#define BASE            1000
+#define MAX_QUEUE_SIZE  200
+#define TIMEOUT         40000
 
 enum packet_t{
     DATA,
