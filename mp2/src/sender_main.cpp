@@ -174,7 +174,7 @@ void ack_handler(packet* pkt){
         return;
     }
     else if (pkt->ack_idx == aqueue.front().seq_idx){
-        // Duplicate ACK
+        // Duplicated ACK
         num_dup++;
         state_transition();
     }
@@ -199,16 +199,15 @@ void ack_handler(packet* pkt){
  */
 void end_connection(){
     packet pkt;
-    char buf[sizeof(packet)];
+    char temp[sizeof(packet)];
     pkt.pkt_type = FIN;
     pkt.data_size=0;
     memset(pkt.data, 0, BASE);
     send_pkt(&pkt);
     // cout << "Sending FIN" << endl;
     while (true) {
-        packet ack;
         slen = sizeof(si_other);
-        if (recvfrom(s, buf, sizeof(packet), 0, (struct sockaddr *)&si_other, (socklen_t*)&slen) == -1) {
+        if (recvfrom(s, temp, sizeof(packet), 0, (struct sockaddr *)&si_other, (socklen_t*)&slen) == -1) {
             if (errno != EAGAIN || errno != EWOULDBLOCK){
                 diep("recvfrom()");
             }
@@ -221,10 +220,12 @@ void end_connection(){
             }
         }
         else{
-            memcpy(&ack, buf, sizeof(packet));
+            packet ack;
+            memcpy(&ack, temp, sizeof(packet));
             if (ack.pkt_type == FINACK){
                 // cout << "Received FINACK" << endl;
                 pkt.pkt_type = FINACK;
+                pkt.data_size = 0;
                 send_pkt(&pkt);
                 // cout << "DONE" << endl;
                 break;
@@ -271,7 +272,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     num_dup = 0;
     status = SLOW_START;
     cwnd = BASE;
-    ssthresh = BASE * 128;
+    ssthresh = BASE * 200;
 
     /* Set timeout for the socket */
     timeval RTO;

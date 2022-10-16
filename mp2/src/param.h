@@ -6,7 +6,7 @@
 #define MSS             1000
 #define BASE            1000
 #define MAX_QUEUE_SIZE  512
-#define TIMEOUT         1000
+#define TIMEOUT         500
 
 enum packet_t{
     DATA,
@@ -16,7 +16,7 @@ enum packet_t{
 };
 
 enum status_t{
-    SLOW_START = 10,
+    SLOW_START = 100,
     CONGESTION_AVOID,
     FAST_RECOVERY
 };
