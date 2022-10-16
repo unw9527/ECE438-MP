@@ -54,6 +54,7 @@ queue <packet> dqueue;
  * @param pkt 
  */
 void send_pkt(packet* pkt){
+    // cout << "Sending packet " << pkt->seq_idx << endl;
     if (sendto(s, pkt, sizeof(packet), 0, (struct sockaddr*)&si_other, sizeof(si_other))== -1){
         diep("sendto()");
     }
@@ -68,7 +69,7 @@ void timeout_handler(){
     ssthresh = cwnd / 2;
     ssthresh = max((float)BASE, ssthresh);
     cwnd = BASE;
-    cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+    // cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
     num_dup = 0;
     send_pkt(&aqueue.front());
@@ -84,7 +85,7 @@ void dup_ack_handler(){
     ssthresh = max((float)BASE, ssthresh);
     cwnd = ssthresh + 3 * BASE;
     cwnd = max((float)BASE, cwnd);
-    cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+    // cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = FAST_RECOVERY;
     // send_pkt(&aqueue.front());
     if (!aqueue.empty()){
@@ -108,11 +109,11 @@ void state_transition(){
             else{
                 if (cwnd >= ssthresh){
                     status = CONGESTION_AVOID;
-                    break;
+                    return;
                 }
                 cwnd += BASE;
                 cwnd = max((float)BASE, cwnd);
-                cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case CONGESTION_AVOID:
@@ -124,7 +125,7 @@ void state_transition(){
             else{
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
-                cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
@@ -132,7 +133,7 @@ void state_transition(){
             cwnd = ssthresh;
             cwnd += BASE;
             cwnd = max((float)BASE, cwnd);
-            cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+            // cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             status = CONGESTION_AVOID;
             break;
         default: 
@@ -281,7 +282,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     num_dup = 0;
     status = SLOW_START;
     cwnd = BASE;
-    ssthresh = BASE * 200;
+    ssthresh = BASE * 64;
 
     /* Set timeout for the socket */
     timeval RTO;
@@ -300,7 +301,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
                 diep("recvfrom()");
             }
             if (!aqueue.empty()){
-                cout << "Timeout when sending " << aqueue.front().seq_idx << endl;
+                // cout << "Timeout when sending " << aqueue.front().seq_idx << endl;
                 timeout_handler();
             }
         }
@@ -319,7 +320,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 int main(int argc, char** argv) {
     unsigned short int udpPort;
     unsigned long long int numBytes;
-    freopen("output.txt", "w", stdout );
+    // freopen("output.txt", "w", stdout );
 
     if (argc != 5) {
         fprintf(stderr, "usage: %s receiver_hostname receiver_port filename_to_xfer bytes_to_xfer\n\n", argv[0]);
