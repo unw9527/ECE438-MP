@@ -284,6 +284,8 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 
 
 	/* Send data and receive acknowledgements on s*/
+    // enqueue();
+    send_pkt();
     while(!dqueue.empty() || !aqueue.empty()){
         memset(temp_buf, 0, sizeof(packet));
         if (recvfrom(s, temp_buf, sizeof(packet), 0, (struct sockaddr *) &si_other, (socklen_t *) &slen) == -1){
