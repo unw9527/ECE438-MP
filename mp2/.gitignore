@@ -1,6 +1,7 @@
 */.o
 .vscode/*
-.DS_Store
+*/.DS_Store
 reliable_receiver
 reliable_sender
 debug.txt
+big_file.txt

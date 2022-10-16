@@ -1,8 +1,8 @@
 /* 
- * File:   receiver_main.c
+ * File:   receiver_main.cpp
  * Author: Kunle Li
  *
- * Created on
+ * Created on Oct 15, 2022
  */
 
 #include <stdio.h>
@@ -17,47 +17,15 @@
 #include <pthread.h>
 #include <iostream>
 #include <queue>
+#include "param.h"
 
 using namespace std;
-
-#define MSS             512
-#define MAX_QUEUE_SIZE  512
-
-enum packet_t {
-    DATA,
-    ACK,
-    FIN,
-    FINACK
-};
-
-typedef struct{
-    int         data_size;
-	int 	    seq_idx;
-	int         ack_idx;
-	packet_t    pkt_type;
-	char        data[MSS];
-} packet;
-
-struct compare {
-    bool operator()(packet a, packet b) {
-        return  a.seq_idx > b.seq_idx; 
-    }
-};
 
 priority_queue<packet, vector<packet>, compare> pqueue;
 
 struct sockaddr_in si_me, si_other;
 int s, slen;
 
-/**
- * @brief Reports errors and exits
- * 
- * @param s 
- */
-void diep(const char *s) {
-    perror(s);
-    exit(1);
-}
 
 /**
  * @brief Helper function to send ACK
@@ -74,7 +42,7 @@ void send_ack(int ack_num, packet_t pkt_type){
         diep("ACK's sendto()");
     }
 
-    cout<<"Sent ACK successfully!" << endl;
+    // cout<< "Sent ACK successfully!" << endl;
 }
 
 /**
@@ -101,6 +69,10 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
 
 
 	/* Now receive data and send acknowledgements */ 
+    FILE* fp = fopen(destinationFile, "wb");  
+    if (fp == NULL){
+        diep("Cannot open the destination file");
+    } 
     while (true){
         packet recv_pkt;
         if (recvfrom(s, &recv_pkt, sizeof(packet), 0, (sockaddr*)&si_other, (socklen_t*)&slen) == -1)
@@ -108,20 +80,20 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
 
         /* The end of transmission */
         if (recv_pkt.pkt_type == FIN){
-            cout << "FIN received" << endl;
+            // cout << "FIN received" << endl;
             send_ack(ack_num, FINACK);
             break;
         }
         else if (recv_pkt.pkt_type == DATA){
             /* Stale packets */
             if (recv_pkt.seq_idx < ack_num){
-                cout << "Received duplicate packet " << recv_pkt.seq_idx << endl;
+                // cout << "Received duplicate packet " << recv_pkt.seq_idx << endl;
             }
 
             /* Out of order packets */
             else if (recv_pkt.seq_idx > ack_num){
-                cout << "Received out of order packet " << recv_pkt.seq_idx << endl;
-                cout << "The queue size is " << pqueue.size() << endl;
+                // cout << "Received out of order packet " << recv_pkt.seq_idx << endl;
+                // cout << "The queue size is " << pqueue.size() << endl;
                 if (pqueue.size() < MAX_QUEUE_SIZE){
                     pqueue.push(recv_pkt);
                 }
@@ -132,12 +104,8 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
 
             /* In order packets */
             else{
-                cout << "Received in order packet " << recv_pkt.seq_idx << endl;
+                // cout << "Received in order packet " << recv_pkt.seq_idx << endl;
                 /* Write to the destination file */
-                FILE* fp = fopen(destinationFile, "wb");  
-                if (fp == NULL){
-                    diep("Cannot open the destination file");
-                } 
                 fwrite(recv_pkt.data, sizeof(char), recv_pkt.data_size, fp);
                 ack_num += recv_pkt.data_size;
 
@@ -148,12 +116,11 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
                     ack_num += pkt.data_size;
                     pqueue.pop();
                 }
-                fclose(fp);
             }
             send_ack(ack_num, ACK);
         }
     }
-
+    fclose(fp);
     close(s);
 	printf("%s received.", destinationFile);
     return;
