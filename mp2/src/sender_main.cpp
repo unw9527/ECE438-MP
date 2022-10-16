@@ -62,6 +62,7 @@ void send_pkt(packet* pkt){
  * 
  */
 void timeout_handler(){
+    // cout << "Timeout!" << endl;
     ssthresh = cwnd / 2;
     ssthresh = max((float)BASE, ssthresh);
     cwnd = BASE;
@@ -75,6 +76,7 @@ void timeout_handler(){
  * 
  */
 void dup_ack_handler(){
+    // cout << "Duplicate ACK!" << endl;
     ssthresh = cwnd / 2;
     ssthresh = max((float)BASE, ssthresh);
     cwnd = ssthresh + 3 * BASE;
@@ -207,7 +209,7 @@ void end_connection(){
     // cout << "Sending FIN" << endl;
     while (true) {
         slen = sizeof(si_other);
-        if (recvfrom(s, temp, sizeof(packet), 0, (struct sockaddr *)&si_other, (socklen_t*)&slen) == -1) {
+        if (recvfrom(s, temp, sizeof(packet), 0, (struct sockaddr *)&si_other, (socklen_t*)&slen) == -1){
             if (errno != EAGAIN || errno != EWOULDBLOCK){
                 diep("recvfrom()");
             }
@@ -283,11 +285,10 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     }
 
     /* Send data and receive acknowledgements on s */
-    int numbytes = 0;
     packet pkt;
     enqueue_and_send();
     while (num_sent < num_total_pkt || num_received < num_sent){
-        if ((numbytes = recvfrom(s, &pkt, sizeof(packet), 0, NULL, NULL)) == -1){
+        if ((recvfrom(s, &pkt, sizeof(packet), 0, NULL, NULL)) == -1){
             if (errno != EAGAIN || errno != EWOULDBLOCK) {
                 diep("recvfrom()");
             }
