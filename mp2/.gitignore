@@ -1,0 +1,6 @@
+*/.o
+.vscode/*
+.DS_Store
+reliable_receiver
+reliable_sender
+debug.txt
