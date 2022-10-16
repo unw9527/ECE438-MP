@@ -5,8 +5,8 @@
 
 #define MSS             1000
 #define BASE            1000
-#define MAX_QUEUE_SIZE  200
-#define TIMEOUT         40000
+#define MAX_QUEUE_SIZE  1000
+#define TIMEOUT         100000
 
 enum packet_t{
     DATA,
