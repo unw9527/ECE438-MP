@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#define MSS             2000
+#define MSS             4000
 #define AMPLIFIER       256 // Amplify the ssthreash by this factor
 #define INIT_SST_AMP    512 // Initial ssthreash is this factor times the MSS
 #define MAX_QUEUE_SIZE  1000
