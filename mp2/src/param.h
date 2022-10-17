@@ -4,7 +4,9 @@
 #include <stdlib.h>
 
 #define MSS             1000
-#define BASE            3000
+#define BASE            2048
+#define AMPLIFIER       32
+#define INIT_SST_AMP    64
 #define MAX_QUEUE_SIZE  1000
 #define TIMEOUT         100000
 

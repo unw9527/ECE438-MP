@@ -67,7 +67,7 @@ void send_pkt(packet* pkt){
 void timeout_handler(){
     // cout << "Timeout!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE * 64, ssthresh);
+    ssthresh = max((float)BASE * AMPLIFIER, ssthresh);
     cwnd = BASE;
     cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
@@ -82,7 +82,7 @@ void timeout_handler(){
 void dup_ack_handler(){
     // cout << "Duplicate ACK!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE * 64, ssthresh);
+    ssthresh = max((float)BASE * AMPLIFIER, ssthresh);
     cwnd = ssthresh + 3 * BASE;
     cwnd = max((float)BASE, cwnd);
     cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
@@ -113,7 +113,7 @@ void state_transition(){
                 }
                 cwnd += BASE;
                 cwnd = max((float)BASE, cwnd);
-                cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case CONGESTION_AVOID:
@@ -125,7 +125,7 @@ void state_transition(){
             else if (num_dup == 0){
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
-                cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
@@ -138,7 +138,7 @@ void state_transition(){
             else if (num_dup == 0){
                 cwnd = ssthresh;
                 cwnd = max((float)BASE, cwnd);
-                cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
                 status = CONGESTION_AVOID;
             }
             break;
@@ -289,7 +289,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     num_dup = 0;
     status = SLOW_START;
     cwnd = BASE;
-    ssthresh = cwnd * 128.0;
+    ssthresh = cwnd * float(INIT_SST_AMP);
 
     /* Set timeout for the socket */
     timeval RTO;
@@ -303,7 +303,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     packet pkt;
     enqueue_and_send();
     while (num_sent < num_total_pkt || num_received < num_total_pkt){
-        cout << "num_sent: " << num_sent << " num_total: " << num_total_pkt << " num_received: " << num_received << endl;
+        // cout << "num_sent: " << num_sent << " num_total: " << num_total_pkt << " num_received: " << num_received << endl;
         if ((recvfrom(s, &pkt, sizeof(packet), 0, NULL, NULL)) == -1){
             if (errno != EAGAIN || errno != EWOULDBLOCK) {
                 diep("recvfrom()");
