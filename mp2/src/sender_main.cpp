@@ -289,7 +289,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     num_dup = 0;
     status = SLOW_START;
     cwnd = BASE;
-    ssthresh = cwnd * 64.0;
+    ssthresh = cwnd * 128.0;
 
     /* Set timeout for the socket */
     timeval RTO;
