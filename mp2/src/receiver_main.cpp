@@ -30,31 +30,29 @@ int s, slen;
 /**
  * @brief Helper function to send ACK
  * 
- * @param ack_num 
- * @param pkt_type 
+ * @param ack_idx   ACK index 
+ * @param pkt_type  Packet type, one of DATA, ACK, FIN, FINACK
  */
-void send_ack(int ack_num, packet_t pkt_type){
+void send_ack(int ack_idx, packet_t pkt_type){
     packet ack;
-    ack.ack_idx = ack_num;
+    ack.ack_idx = ack_idx;
     ack.pkt_type = pkt_type;
 
     if (sendto(s, &ack, sizeof(packet), 0, (sockaddr*)&si_other, (socklen_t)sizeof (si_other))==-1){
         diep("ACK's sendto()");
     }
-
-    // cout<< "Sent ACK successfully!" << endl;
 }
 
 /**
  * @brief Main receiver function
  * 
- * @param myUDPport 
- * @param destinationFile 
+ * @param myUDPport         UDP port number 
+ * @param destinationFile   File to write the received data to
  */
 void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
     
     slen = sizeof (si_other);
-    int ack_num = 0;
+    int ack_idx = 0;
 
     if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
         diep("socket");
@@ -80,18 +78,18 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
 
         /* The end of transmission */
         if (recv_pkt.pkt_type == FIN){
-            // cout << "FIN received" << endl;
-            send_ack(ack_num, FINACK);
+            cout << "FIN received" << endl;
+            send_ack(ack_idx, FINACK);
             break;
         }
         else if (recv_pkt.pkt_type == DATA){
             /* Stale packets */
-            if (recv_pkt.seq_idx < ack_num){
+            if (recv_pkt.seq_idx < ack_idx){
                 // cout << "Received duplicate packet " << recv_pkt.seq_idx << endl;
             }
 
             /* Out of order packets */
-            else if (recv_pkt.seq_idx > ack_num){
+            else if (recv_pkt.seq_idx > ack_idx){
                 // cout << "Received out of order packet " << recv_pkt.seq_idx << endl;
                 // cout << "The queue size is " << pqueue.size() << endl;
                 if (pqueue.size() < MAX_QUEUE_SIZE){
@@ -107,17 +105,17 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
                 // cout << "Received in order packet " << recv_pkt.seq_idx << endl;
                 /* Write to the destination file */
                 fwrite(recv_pkt.data, sizeof(char), recv_pkt.data_size, fp);
-                ack_num += recv_pkt.data_size;
+                ack_idx += recv_pkt.data_size;
 
                 /* Write packets that are at the top of the queue */
-                while (!pqueue.empty() && pqueue.top().seq_idx == ack_num){
+                while (!pqueue.empty() && pqueue.top().seq_idx == ack_idx){
                     packet pkt = pqueue.top();
                     fwrite(pkt.data, sizeof(char), pkt.data_size, fp);
-                    ack_num += pkt.data_size;
+                    ack_idx += pkt.data_size;
                     pqueue.pop();
                 }
             }
-            send_ack(ack_num, ACK);
+            send_ack(ack_idx, ACK);
         }
     }
     fclose(fp);
@@ -126,9 +124,7 @@ void reliablyReceive(unsigned short int myUDPport, char* destinationFile) {
     return;
 }
 
-/*
- * 
- */
+
 int main(int argc, char** argv) {
 
     unsigned short int udpPort;
