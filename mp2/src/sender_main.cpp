@@ -72,12 +72,15 @@ void timeout_handler(){
     cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
 
-    queue<packet> tmp_q = aqueue; 
-    for (int i = 0; i < 32; i++){
-        if (!tmp_q.empty()){
-            send_pkt(&tmp_q.front());
-            tmp_q.pop();
-        }
+    // queue<packet> tmp_q = aqueue; 
+    // for (int i = 0; i < 32; i++){
+    //     if (!tmp_q.empty()){
+    //         send_pkt(&tmp_q.front());
+    //         tmp_q.pop();
+    //     }
+    // }
+    if (!aqueue.empty()){
+        send_pkt(&aqueue.front());
     }
     num_dup = 0;
 }
