@@ -71,8 +71,15 @@ void timeout_handler(){
     cwnd = BASE;
     cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
+
+    queue<packet> tmp_q = aqueue; 
+    for (int i = 0; i < 32; i++){
+        if (!tmp_q.empty()){
+            send_pkt(&tmp_q.front());
+            tmp_q.pop();
+        }
+    }
     num_dup = 0;
-    send_pkt(&aqueue.front());
 }
 
 /**
@@ -87,7 +94,7 @@ void dup_ack_handler(){
     cwnd = max((float)BASE, cwnd);
     cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = FAST_RECOVERY;
-    send_pkt(&aqueue.front());
+    // send_pkt(&aqueue.front());
     if (!aqueue.empty()){
         send_pkt(&aqueue.front());
     }
@@ -101,7 +108,7 @@ void dup_ack_handler(){
 void state_transition(){
     switch(status){
         case SLOW_START:
-            // Duplicate ACK
+            // Duplicated ACK
             if (num_dup >= 3){
                 dup_ack_handler();
             }
@@ -113,11 +120,11 @@ void state_transition(){
                 }
                 cwnd += BASE;
                 cwnd = max((float)BASE, cwnd);
-                cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case CONGESTION_AVOID:
-            // Duplicate ACK
+            // Duplicated ACK
             if (num_dup >= 3){
                 dup_ack_handler();
             }
@@ -125,7 +132,7 @@ void state_transition(){
             else if (num_dup == 0){
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
-                cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
@@ -200,11 +207,11 @@ void ack_handler(packet* pkt){
         num_dup = 0;
         state_transition();
         int num_pkt = ceil((pkt->ack_idx - aqueue.front().seq_idx) / (1.0 * BASE));
+        int count = 0;
         num_received += num_pkt;
-        int cnt = 0;
-        while(!aqueue.empty() && cnt < num_pkt){
+        while(!aqueue.empty() && count < num_pkt){
             aqueue.pop();
-            cnt++;
+            count++;
         }
         enqueue_and_send();
     }
@@ -303,7 +310,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     packet pkt;
     enqueue_and_send();
     while (num_sent < num_total_pkt || num_received < num_total_pkt){
-        cout << "num_sent: " << num_sent << " num_total: " << num_total_pkt << " num_received: " << num_received << endl;
+        // cout << "num_sent: " << num_sent << " num_total: " << num_total_pkt << " num_received: " << num_received << endl;
         if ((recvfrom(s, &pkt, sizeof(packet), 0, NULL, NULL)) == -1){
             if (errno != EAGAIN || errno != EWOULDBLOCK) {
                 diep("recvfrom()");
@@ -311,7 +318,6 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
             if (!aqueue.empty()){
                 // cout << "Timeout when sending " << aqueue.front().seq_idx << endl;
                 timeout_handler();
-                send_pkt(&aqueue.front());
             }
         }
         else{
