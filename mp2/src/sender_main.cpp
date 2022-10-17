@@ -68,7 +68,7 @@ void timeout_handler(){
     // cout << "Timeout!" << endl;
     ssthresh = cwnd / 2;
     ssthresh = max((float)MSS * AMPLIFIER, ssthresh);
-    cwnd = MSS;
+    cwnd = MSS * AMPLIFIER;
     cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
 
