@@ -67,9 +67,9 @@ void send_pkt(packet* pkt){
 void timeout_handler(){
     // cout << "Timeout!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE, ssthresh);
+    ssthresh = max((float)BASE * 32, ssthresh);
     cwnd = BASE;
-    // cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+    cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
     num_dup = 0;
     send_pkt(&aqueue.front());
@@ -82,10 +82,10 @@ void timeout_handler(){
 void dup_ack_handler(){
     // cout << "Duplicate ACK!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE, ssthresh);
+    ssthresh = max((float)BASE * 32, ssthresh);
     cwnd = ssthresh + 3 * BASE;
     cwnd = max((float)BASE, cwnd);
-    // cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+    cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = FAST_RECOVERY;
     send_pkt(&aqueue.front());
     if (!aqueue.empty()){
@@ -113,7 +113,7 @@ void state_transition(){
                 }
                 cwnd += BASE;
                 cwnd = max((float)BASE, cwnd);
-                // cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case CONGESTION_AVOID:
@@ -125,15 +125,18 @@ void state_transition(){
             else{
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
-                // cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
             // New ACK
+            if (num_dup > 0){
+                return;
+            }
             cwnd = ssthresh;
             cwnd += BASE;
             cwnd = max((float)BASE, cwnd);
-            // cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+            cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             status = CONGESTION_AVOID;
             break;
         default: 
@@ -153,7 +156,8 @@ void enqueue_and_send(){
     memset(buf, 0, BASE);
     packet pkt;
     for (int i = 0; i < ceil((cwnd - aqueue.size() * BASE) / BASE); i++){
-        int read_size = fread(buf, sizeof(char), BASE, fp);
+        int temp = min(bytes_to_send, (uint64_t)BASE);
+        int read_size = fread(buf, sizeof(char), temp, fp);
         if (read_size > 0){
             pkt.pkt_type = DATA;
             pkt.data_size = read_size;
@@ -166,7 +170,6 @@ void enqueue_and_send(){
         }
     }
     // Send
-    // cout << "dqueue size: " << dqueue.size() << endl;
     while (!dqueue.empty()){
         send_pkt(&dqueue.front());
         num_sent++;
@@ -188,12 +191,6 @@ void ack_handler(packet* pkt){
         // Duplicated ACK
         num_dup++;
         state_transition();
-        if(num_dup >= 3){
-            if(!aqueue.empty()){
-                send_pkt(&aqueue.front());
-            }
-            num_dup = 0;
-        }
     }
     else{
         // New ACK
@@ -240,7 +237,7 @@ void end_connection(){
             packet ack;
             memcpy(&ack, temp, sizeof(packet));
             if (ack.pkt_type == FINACK){
-                cout << "Received FINACK" << endl;
+                // cout << "Received FINACK" << endl;
                 pkt.pkt_type = FINACK;
                 pkt.data_size = 0;
                 send_pkt(&pkt);
@@ -289,7 +286,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     num_dup = 0;
     status = SLOW_START;
     cwnd = BASE;
-    ssthresh = BASE * 64;
+    ssthresh = cwnd * 64.0;
 
     /* Set timeout for the socket */
     timeval RTO;
@@ -302,7 +299,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     /* Send data and receive acknowledgements on s */
     packet pkt;
     enqueue_and_send();
-    while (num_sent < num_total_pkt || num_received < num_sent - 2){
+    while (num_sent < num_total_pkt || num_received < num_total_pkt){
         cout << "num_sent: " << num_sent << " num_total: " << num_total_pkt << " num_received: " << num_received << endl;
         if ((recvfrom(s, &pkt, sizeof(packet), 0, NULL, NULL)) == -1){
             if (errno != EAGAIN || errno != EWOULDBLOCK) {
