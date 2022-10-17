@@ -67,13 +67,13 @@ void send_pkt(packet* pkt){
 void timeout_handler(){
     // cout << "Timeout!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE * AMPLIFIER, ssthresh);
-    cwnd = BASE;
+    ssthresh = max((float)MSS * AMPLIFIER, ssthresh);
+    cwnd = MSS;
     cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
 
     queue<packet> tmp_q = aqueue; 
-    for (int i = 0; i < 64; i++){
+    for (int i = 0; i < 32; i++){
         if (!tmp_q.empty()){
             send_pkt(&tmp_q.front());
             tmp_q.pop();
@@ -92,9 +92,9 @@ void timeout_handler(){
 void dup_ack_handler(){
     // cout << "Duplicate ACK!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE * AMPLIFIER, ssthresh);
-    cwnd = ssthresh + 3 * BASE;
-    cwnd = max((float)BASE, cwnd);
+    ssthresh = max((float)MSS * AMPLIFIER, ssthresh);
+    cwnd = ssthresh + 3 * MSS;
+    cwnd = max((float)MSS, cwnd);
     cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = FAST_RECOVERY;
     // send_pkt(&aqueue.front());
@@ -121,8 +121,8 @@ void state_transition(){
                     status = CONGESTION_AVOID;
                     return;
                 }
-                cwnd += BASE;
-                cwnd = max((float)BASE, cwnd);
+                cwnd += MSS;
+                cwnd = max((float)MSS, cwnd);
                 // cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
@@ -133,21 +133,21 @@ void state_transition(){
             }
             // New ACK
             else if (num_dup == 0){
-                cwnd += BASE * floor(1.0 * BASE / cwnd); 
-                cwnd = max((float)BASE, cwnd);
+                cwnd += MSS * floor(1.0 * MSS / cwnd); 
+                cwnd = max((float)MSS, cwnd);
                 // cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
             // Duplicated ACK
             if (num_dup > 0){
-                cwnd += BASE;
+                cwnd += MSS;
                 return;
             }
             // New ACK
             else if (num_dup == 0){
                 cwnd = ssthresh;
-                cwnd = max((float)BASE, cwnd);
+                cwnd = max((float)MSS, cwnd);
                 cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
                 status = CONGESTION_AVOID;
             }
@@ -165,11 +165,11 @@ void enqueue_and_send(){
     if (bytes_to_send == 0){
         return;
     }
-    char buf[BASE];
-    memset(buf, 0, BASE);
+    char buf[MSS];
+    memset(buf, 0, MSS);
     packet pkt;
-    for (int i = 0; i < ceil((cwnd - aqueue.size() * BASE) / BASE); i++){
-        int temp = min(bytes_to_send, (uint64_t)BASE);
+    for (int i = 0; i < ceil((cwnd - aqueue.size() * MSS) / MSS); i++){
+        int temp = min(bytes_to_send, (uint64_t)MSS);
         int read_size = fread(buf, sizeof(char), temp, fp);
         if (read_size > 0){
             pkt.pkt_type = DATA;
@@ -209,7 +209,7 @@ void ack_handler(packet* pkt){
         // New ACK
         num_dup = 0;
         state_transition();
-        int num_pkt = ceil((pkt->ack_idx - aqueue.front().seq_idx) / (1.0 * BASE));
+        int num_pkt = ceil((pkt->ack_idx - aqueue.front().seq_idx) / (1.0 * MSS));
         int count = 0;
         num_received += num_pkt;
         while(!aqueue.empty() && count < num_pkt){
@@ -229,7 +229,7 @@ void end_connection(){
     char temp[sizeof(packet)];
     pkt.pkt_type = FIN;
     pkt.data_size=0;
-    memset(pkt.data, 0, BASE);
+    memset(pkt.data, 0, MSS);
     send_pkt(&pkt);
     cout << "Sending FIN" << endl;
     while (true) {
@@ -242,7 +242,7 @@ void end_connection(){
                 cout << "Timeout. Resend FIN" << endl;
                 pkt.pkt_type = FIN;
                 pkt.data_size = 0;
-                memset(pkt.data, 0, BASE);
+                memset(pkt.data, 0, MSS);
                 send_pkt(&pkt);
             }
         }
@@ -291,14 +291,14 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
     }
     
     /* Initialize var */
-    num_total_pkt = ceil(1.0 * bytesToTransfer / BASE);
+    num_total_pkt = ceil(1.0 * bytesToTransfer / MSS);
     bytes_to_send = bytesToTransfer;
     seq_idx = 0;
     num_sent = 0;
     num_received = 0;
     num_dup = 0;
     status = SLOW_START;
-    cwnd = BASE;
+    cwnd = MSS;
     ssthresh = cwnd * float(INIT_SST_AMP);
 
     /* Set timeout for the socket */
