@@ -120,7 +120,7 @@ void state_transition(){
                 }
                 cwnd += BASE;
                 cwnd = max((float)BASE, cwnd);
-                cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "SLOW_START window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case CONGESTION_AVOID:
@@ -132,7 +132,7 @@ void state_transition(){
             else if (num_dup == 0){
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
-                cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                // cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
@@ -335,7 +335,7 @@ void reliablyTransfer(char* hostname, unsigned short int hostUDPport, char* file
 int main(int argc, char** argv) {
     unsigned short int udpPort;
     unsigned long long int numBytes;
-    freopen("output.txt", "w", stdout);
+    // freopen("output.txt", "w", stdout);
 
     if (argc != 5) {
         fprintf(stderr, "usage: %s receiver_hostname receiver_port filename_to_xfer bytes_to_xfer\n\n", argv[0]);
