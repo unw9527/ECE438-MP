@@ -139,7 +139,7 @@ void state_transition(){
             }
             break;
         case FAST_RECOVERY:
-            
+            // Duplicated ACK
             if (num_dup > 0){
                 cwnd += BASE;
                 return;
