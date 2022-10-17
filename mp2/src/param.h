@@ -8,7 +8,7 @@
 #define AMPLIFIER       256
 #define INIT_SST_AMP    512
 #define MAX_QUEUE_SIZE  1000
-#define TIMEOUT         40000
+#define TIMEOUT         100000
 
 enum packet_t{
     DATA,
