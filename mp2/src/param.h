@@ -5,10 +5,10 @@
 
 #define MSS             1000
 #define BASE            2000
-#define AMPLIFIER       64
+#define AMPLIFIER       128
 #define INIT_SST_AMP    64
 #define MAX_QUEUE_SIZE  1000
-#define TIMEOUT         40000
+#define TIMEOUT         100000
 
 enum packet_t{
     DATA,
