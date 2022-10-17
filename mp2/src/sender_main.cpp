@@ -67,7 +67,7 @@ void send_pkt(packet* pkt){
 void timeout_handler(){
     // cout << "Timeout!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE * 32, ssthresh);
+    ssthresh = max((float)BASE * 64, ssthresh);
     cwnd = BASE;
     cout << "timeout window size: " << cwnd << " ssthresh: " << ssthresh << endl;
     status = SLOW_START;
@@ -82,7 +82,7 @@ void timeout_handler(){
 void dup_ack_handler(){
     // cout << "Duplicate ACK!" << endl;
     ssthresh = cwnd / 2;
-    ssthresh = max((float)BASE * 32, ssthresh);
+    ssthresh = max((float)BASE * 64, ssthresh);
     cwnd = ssthresh + 3 * BASE;
     cwnd = max((float)BASE, cwnd);
     cout << "duplicate ack window size: " << cwnd << " ssthresh: " << ssthresh << endl;
@@ -106,7 +106,7 @@ void state_transition(){
                 dup_ack_handler();
             }
             // New ACK
-            else{
+            else if (num_dup == 0){
                 if (cwnd >= ssthresh){
                     status = CONGESTION_AVOID;
                     return;
@@ -122,22 +122,25 @@ void state_transition(){
                 dup_ack_handler();
             }
             // New ACK
-            else{
+            else if (num_dup == 0){
                 cwnd += BASE * floor(1.0 * BASE / cwnd); 
                 cwnd = max((float)BASE, cwnd);
                 cout << "CONGESTION_AVOID window size: " << cwnd << " ssthresh: " << ssthresh << endl;
             }
             break;
         case FAST_RECOVERY:
-            // New ACK
+            
             if (num_dup > 0){
+                cwnd += BASE;
                 return;
             }
-            cwnd = ssthresh;
-            cwnd += BASE;
-            cwnd = max((float)BASE, cwnd);
-            cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
-            status = CONGESTION_AVOID;
+            // New ACK
+            else if (num_dup == 0){
+                cwnd = ssthresh;
+                cwnd = max((float)BASE, cwnd);
+                cout << "FAST_RECOVERY window size: " << cwnd << " ssthresh: " << ssthresh << endl;
+                status = CONGESTION_AVOID;
+            }
             break;
         default: 
             break;
