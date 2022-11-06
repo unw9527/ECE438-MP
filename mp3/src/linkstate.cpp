@@ -80,7 +80,16 @@ int main(int argc, char** argv) {
     for (int src = 1; src <= numVertices; ++src) {
         for (int dest = 1; dest <= numVertices; ++dest) {
             if (vertices[src].dist[dest] != INT_MAX) {
-                fprintf(fpOut, "%d %d %d\n", dest, vertices[src].prev[dest], vertices[src].dist[dest]);
+                // Find the nexthop
+                int nexthop = dest;
+                while (vertices[src].prev[nexthop] != src){
+                    if (vertices[src].prev[nexthop] == -1){
+                        nexthop = src;
+                        break;
+                    }
+                    nexthop = vertices[src].prev[nexthop];
+                }
+                fprintf(fpOut, "%d %d %d\n", dest, nexthop, vertices[src].dist[dest]);
             }
         }
     }
