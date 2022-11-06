@@ -36,6 +36,26 @@ void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
 
 }
 
+vector<int> findPath(int src, int dest, vertex* vertices) {
+    int nexthop = dest;
+    vector<int> path;
+    
+    if (vertices[src].prev[nexthop] == src){
+        path.push_back(dest);
+    }
+    while (vertices[src].prev[nexthop] != src){
+        if (vertices[src].prev[nexthop] == -1){
+            nexthop = src;
+            path.push_back(nexthop);
+            break;
+        }
+        nexthop = vertices[src].prev[nexthop];
+        path.push_back(nexthop);
+    }
+    
+    return path;
+}
+
 int main(int argc, char** argv) {
     //printf("Number of arguments: %d", argc);
     if (argc != 4) {
@@ -58,6 +78,7 @@ int main(int argc, char** argv) {
     inFile.open(argv[1]);
     vector<Pair> adj[numVertices + 1]; 
     while(inFile >> src >> dest >> weight){
+        if (atoi(weight.c_str()) == -999) continue;
         createEdge(atoi(src.c_str()), atoi(dest.c_str()), atoi(weight.c_str()), adj);
     }
     inFile.close();
@@ -80,19 +101,34 @@ int main(int argc, char** argv) {
     for (int src = 1; src <= numVertices; ++src) {
         for (int dest = 1; dest <= numVertices; ++dest) {
             if (vertices[src].dist[dest] != INT_MAX) {
-                // Find the nexthop
-                int nexthop = dest;
-                while (vertices[src].prev[nexthop] != src){
-                    if (vertices[src].prev[nexthop] == -1){
-                        nexthop = src;
-                        break;
-                    }
-                    nexthop = vertices[src].prev[nexthop];
-                }
-                fprintf(fpOut, "%d %d %d\n", dest, nexthop, vertices[src].dist[dest]);
+                // Find the path
+                vector<int> path = findPath(src, dest, vertices);
+                fprintf(fpOut, "%d %d %d\n", dest, path.back(), vertices[src].dist[dest]);
             }
         }
     }
+    
+    // Read the message file
+    inFile.open(argv[2]);
+    string line;
+    while(getline(inFile, line)){
+        int src = atoi(line.substr(0, line.find(" ")).c_str());
+        int secondSpaceIdx = line.find(" ") + 1;
+        int dest = atoi(line.substr(line.find(" ") + 1, line.find(" ", secondSpaceIdx)).c_str());
+        string msg = line.substr(line.find(" ", secondSpaceIdx) + 1);
+
+        if (vertices[src].dist[dest] != INT_MAX) {
+            // Find the path
+            vector<int> path = findPath(src, dest, vertices);
+            path.push_back(src); // need to append src here, but no need when calculating prev!!!
+            fprintf(fpOut, "from %d to %d cost %d hops ", src, dest, vertices[src].dist[dest]);
+            for (int i = path.size() - 1; i >= 0; --i) {
+                fprintf(fpOut, "%d ", path[i]);
+            }
+            fprintf(fpOut, "message %s\n", msg.c_str());
+        }
+    }
+    inFile.close();
 
     fclose(fpOut);
     return 0;
