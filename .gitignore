@@ -1,3 +1,5 @@
 */.DS_Store
 *.o
 .vscode
+mp3/distvec
+mp3/linkstate
