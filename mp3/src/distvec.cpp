@@ -8,7 +8,7 @@
 #include <climits>
 
 /**
- * @brief Create an Edge object
+ * @brief Create an edge
  * 
  * @param u Starting vertex
  * @param v Ending vertex
@@ -54,7 +54,7 @@ void distanceVec(vertex* vx, int numVertices, vector<Pair> adj[]) {
         printf("Invalid vertex\n");
         return;
     }
-    // Must clear both vectors each time Distance vector routings is called
+    // Must clear both vectors each time Distance vector routing is called
     vx->dist.clear();
     vx->prev.clear();
     vx->dist.resize(numVertices + 1, INT_MAX);
@@ -65,28 +65,15 @@ void distanceVec(vertex* vx, int numVertices, vector<Pair> adj[]) {
     for (int i = 0; i < numVertices - 1; i++) {
         for (int j = 1; j <= numVertices; j++) {
             for (int k = 0; k < adj[j].size(); k++) {
-                int u = j;
                 int v = adj[j][k].first;
                 int w = adj[j][k].second;
-                if (vx->dist[u] != INT_MAX && vx->dist[u] + w < vx->dist[v]) {
-                    vx->dist[v] = vx->dist[u] + w;
-                    vx->prev[v] = u;
+                if (vx->dist[j] != INT_MAX && vx->dist[j] + w < vx->dist[v]) {
+                    vx->dist[v] = vx->dist[j] + w;
+                    vx->prev[v] = j;
                 }
             }
         }
     }
-
-    // DEBUG purpose
-    // if (vx->sourceID == 3){
-    //     for (int i = 0; i < vx->dist.size(); i++){
-    //         cout << vx->dist[i] << " ";
-    //     }
-    //     cout << endl;
-    //     for (int i = 0; i < vx->prev.size(); i++){
-    //         cout << vx->prev[i] << " ";
-    //     }
-    //     cout << endl;
-    // }
 }
 
 /**
@@ -113,7 +100,6 @@ vector<int> findPath(int src, int dest, vertex* vertices) {
         nexthop = vertices[src].prev[nexthop];
         path.push_back(nexthop);
     }
-    
     return path;
 }
 
@@ -238,7 +224,7 @@ int main(int argc, char** argv) {
     FILE *fpOut;
     fpOut = fopen("output.txt", "w");
 
-    // Initial routing table
+    // Initialize the routing table
     printRoutingTable(fpOut, numVertices, vertices);
     
     // Read the message file and print
@@ -257,7 +243,7 @@ int main(int argc, char** argv) {
         int dest = atoi(tmpDest.c_str());
         int weight = atoi(tmpWeight.c_str());
 
-        // Update the weight on the edge
+        // Update the weight on the desired edge
         if (weight != -999){
             if (!updateWeight(src, dest, weight, adj)){
                 createEdge(src, dest, weight, adj);
@@ -267,10 +253,11 @@ int main(int argc, char** argv) {
             deleteEdge(src, dest, adj);
         }
 
-        // Run Distance vector routing's algorithm on each vertex
+        // Run Distance vector routing algorithm on each vertex
         for (int i = 1; i <= numVertices; ++i) {
             distanceVec(&vertices[i], numVertices, adj);
         }
+
         // Print the new routing table
         printRoutingTable(fpOut, numVertices, vertices);
 
@@ -282,7 +269,6 @@ int main(int argc, char** argv) {
         inFile.close();
     }
     changesFile.close();
-
     fclose(fpOut);
     return 0;
 }
