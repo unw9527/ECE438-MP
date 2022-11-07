@@ -7,11 +7,26 @@
 #include <queue>
 #include <climits>
 
+/**
+ * @brief Create an Edge object
+ * 
+ * @param u Starting vertex
+ * @param v Ending vertex
+ * @param w Weight
+ * @param adj Adjancency matrix
+ */
 void createEdge(int u, int v, int w, vector<Pair> adj[]) {
     adj[u].push_back(make_pair(v, w));
     adj[v].push_back(make_pair(u, w));
 }
 
+/**
+ * @brief Remove an edge
+ * 
+ * @param u Starting vertex
+ * @param v Ending vertex
+ * @param adj Adjancency matrix
+ */
 void deleteEdge(int u, int v, vector<Pair> adj[]) {
     for (int i = 0; i < adj[u].size(); i++) {
         if (adj[u][i].first == v) {
@@ -27,19 +42,21 @@ void deleteEdge(int u, int v, vector<Pair> adj[]) {
     }
 }
 
+/**
+ * @brief Dijkstra's algorithm
+ * 
+ * @param vx    A pointer to the vertex
+ * @param numVertices #vertices
+ * @param adj   Adjancency matrix
+ */
 void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
     if (NULL == vx) {
         printf("Invalid vertex\n");
         return;
     }
-    // cout << "vertex " << vx->sourceID << endl;
-    // for (int i = 0; i < numVertices; i++){
-    //     for (int j = 0; j < adj[i].size(); j++){
-    //         cout << i << " " << adj[i][j].first << " " << adj[i][j].second << endl;
-    //     }
-    // }
     priority_queue<Pair, vector<Pair>, greater<Pair> > pq;
     vector<bool> visited(numVertices, false);
+    // Must clear both vectors each time dijkstras is called
     vx->dist.clear();
     vx->prev.clear();
     vx->dist.resize(numVertices + 1, INT_MAX);
@@ -61,7 +78,7 @@ void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
                 vx->prev[v] = u;
                 pq.push(make_pair(vx->dist[v], v));
             }
-            // Tie breaking
+            // Tie breaker
             else if (vx->dist[v] == vx->dist[u] + w) {
                 if (vx->prev[v] > u) {
                     vx->prev[v] = u;
@@ -70,20 +87,28 @@ void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
             }
         }
     }
-
-    if (vx->sourceID == 3){
-        for (int i = 0; i < vx->dist.size(); i++){
-            cout << vx->dist[i] << " ";
-        }
-        cout << endl;
-        for (int i = 0; i < vx->prev.size(); i++){
-            cout << vx->prev[i] << " ";
-        }
-        cout << endl;
-    }
+    // DEBUG purpose
+    // if (vx->sourceID == 3){
+    //     for (int i = 0; i < vx->dist.size(); i++){
+    //         cout << vx->dist[i] << " ";
+    //     }
+    //     cout << endl;
+    //     for (int i = 0; i < vx->prev.size(); i++){
+    //         cout << vx->prev[i] << " ";
+    //     }
+    //     cout << endl;
+    // }
 
 }
 
+/**
+ * @brief Find the shortest path from source to destination
+ * 
+ * @param src   Source vertex
+ * @param dest  Destination vertex 
+ * @param vertices  A pointer to the vertices
+ * @return vector<int> Path in the reversed order
+ */
 vector<int> findPath(int src, int dest, vertex* vertices) {
     int nexthop = dest;
     vector<int> path;
@@ -104,6 +129,16 @@ vector<int> findPath(int src, int dest, vertex* vertices) {
     return path;
 }
 
+/**
+ * @brief Update the weight on the edge
+ * 
+ * @param u Starting vertex
+ * @param v Ending vertex
+ * @param w Weight
+ * @param adj   Adjancency matrix
+ * @return true    If the edge exists
+ * @return false   If the edge does not exist
+ */
 bool updateWeight(int u, int v, int w, vector<Pair> adj[]) {
     bool found = 0;
     for (int i = 0; i < adj[u].size(); i++) {
@@ -123,6 +158,13 @@ bool updateWeight(int u, int v, int w, vector<Pair> adj[]) {
     return found;
 }
 
+/**
+ * @brief Update and print the routing table
+ * 
+ * @param fpOut     A pointer to the output file
+ * @param numVertices   #vertices
+ * @param vertices  A pointer to the vertices
+ */
 void printRoutingTable(FILE* fpOut, int numVertices, vertex* vertices) {
     for (int src = 1; src <= numVertices; ++src) {
         for (int dest = 1; dest <= numVertices; ++dest) {
@@ -135,6 +177,13 @@ void printRoutingTable(FILE* fpOut, int numVertices, vertex* vertices) {
     }
 }
 
+/**
+ * @brief Print a line of the msg to the output file
+ * 
+ * @param fpOut    A pointer to the output file
+ * @param line     One line from the messagefile
+ * @param vertices  A pointer to the vertices
+ */
 void printOneLineMsg(FILE* fpOut, string line, vertex* vertices) {
     int src = atoi(line.substr(0, line.find(" ")).c_str());
     int secondSpaceIdx = line.find(" ") + 1;
@@ -147,6 +196,7 @@ void printOneLineMsg(FILE* fpOut, string line, vertex* vertices) {
         path.push_back(src); // need to append src here, but no need when calculating prev!!!
         fprintf(fpOut, "from %d to %d cost %d hops ", src, dest, vertices[src].dist[dest]);
         for (int i = path.size() - 1; i >= 0; --i) {
+            if (path[i] == dest) continue;
             fprintf(fpOut, "%d ", path[i]);
         }
         fprintf(fpOut, "message %s\n", msg.c_str());
@@ -221,9 +271,7 @@ int main(int argc, char** argv) {
 
         // Update the weight on the edge
         if (weight != -999){
-            // weight = LARGE_WEIGHT;
-            bool found = updateWeight(src, dest, weight, adj);
-            if (!found && weight != LARGE_WEIGHT){
+            if (!updateWeight(src, dest, weight, adj)){
                 createEdge(src, dest, weight, adj);
             }
         }
