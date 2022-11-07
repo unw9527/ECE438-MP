@@ -51,7 +51,7 @@ void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
             else if (vx->dist[v] == vx->dist[u] + w) {
                 if (vx->prev[v] > u) {
                     vx->prev[v] = u;
-                    pq.push(make_pair(vx->dist[v], v));
+                    // pq.push(make_pair(vx->dist[v], v));
                 }
             }
         }
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
             weight = LARGE_WEIGHT;
         }
         bool found = updateWeight(src, dest, weight, adj);
-        if (!found){
+        if (!found && weight != LARGE_WEIGHT){
             createEdge(src, dest, weight, adj);
         }
 
