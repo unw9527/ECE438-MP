@@ -12,27 +12,41 @@ void createEdge(int u, int v, int w, vector<Pair> adj[]) {
     adj[v].push_back(make_pair(u, w));
 }
 
-// void deleteEdge(int u, int v, vector<Pair> adj[]) {
-//     for (int i = 0; i < adj[u].size(); i++) {
-//         if (adj[u][i].first == v) {
-//             adj[u].erase(adj[u].begin() + i);
-//             break;
-//         }
-//     }
-//     for (int i = 0; i < adj[v].size(); i++) {
-//         if (adj[v][i].first == u) {
-//             adj[v].erase(adj[v].begin() + i);
-//             break;
-//         }
-//     }
-// }
+void deleteEdge(int u, int v, vector<Pair> adj[]) {
+    for (int i = 0; i < adj[u].size(); i++) {
+        if (adj[u][i].first == v) {
+            adj[u].erase(adj[u].begin() + i);
+            break;
+        }
+    }
+    for (int i = 0; i < adj[v].size(); i++) {
+        if (adj[v][i].first == u) {
+            adj[v].erase(adj[v].begin() + i);
+            break;
+        }
+    }
+}
 
 void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
-    if (NULL == vx) return;
+    if (NULL == vx) {
+        printf("Invalid vertex\n");
+        return;
+    }
+    // cout << "vertex " << vx->sourceID << endl;
+    // for (int i = 0; i < numVertices; i++){
+    //     for (int j = 0; j < adj[i].size(); j++){
+    //         cout << i << " " << adj[i][j].first << " " << adj[i][j].second << endl;
+    //     }
+    // }
     priority_queue<Pair, vector<Pair>, greater<Pair> > pq;
     vector<bool> visited(numVertices, false);
+    vx->dist.clear();
+    vx->prev.clear();
+    vx->dist.resize(numVertices + 1, INT_MAX);
+    vx->prev.resize(numVertices + 1, -1);
     vx->dist[vx->sourceID] = 0;
     pq.push(make_pair(0, vx->sourceID));
+    
     while (!pq.empty()) {
         int u = pq.top().second;
         pq.pop();
@@ -51,10 +65,21 @@ void dijkstras(vertex* vx, int numVertices, vector<Pair> adj[]) {
             else if (vx->dist[v] == vx->dist[u] + w) {
                 if (vx->prev[v] > u) {
                     vx->prev[v] = u;
-                    // pq.push(make_pair(vx->dist[v], v));
+                    pq.push(make_pair(vx->dist[v], v));
                 }
             }
         }
+    }
+
+    if (vx->sourceID == 3){
+        for (int i = 0; i < vx->dist.size(); i++){
+            cout << vx->dist[i] << " ";
+        }
+        cout << endl;
+        for (int i = 0; i < vx->prev.size(); i++){
+            cout << vx->prev[i] << " ";
+        }
+        cout << endl;
     }
 
 }
@@ -117,11 +142,6 @@ void printOneLineMsg(FILE* fpOut, string line, vertex* vertices) {
     string msg = line.substr(line.find(" ", secondSpaceIdx) + 1);
 
     if (vertices[src].dist[dest] != INT_MAX) {
-        // Unreachable case
-        if (vertices[src].dist[dest] >= LARGE_WEIGHT){
-            fprintf(fpOut, "from %d to %d cost infinite hops unreachable message %s\n", src, dest, msg.c_str());
-            return;
-        }
         // Find the path
         vector<int> path = findPath(src, dest, vertices);
         path.push_back(src); // need to append src here, but no need when calculating prev!!!
@@ -130,6 +150,11 @@ void printOneLineMsg(FILE* fpOut, string line, vertex* vertices) {
             fprintf(fpOut, "%d ", path[i]);
         }
         fprintf(fpOut, "message %s\n", msg.c_str());
+    }
+    // Unreachable case
+    else {
+        fprintf(fpOut, "from %d to %d cost infinite hops unreachable message %s\n", src, dest, msg.c_str());
+        return;
     }
 }
 
@@ -154,7 +179,7 @@ int main(int argc, char** argv) {
     inFile.open(argv[1]);
     vector<Pair> adj[numVertices + 1]; 
     while(inFile >> src >> dest >> weight){
-        if (atoi(weight.c_str()) == 999) continue;
+        if (atoi(weight.c_str()) == -999) continue;
         createEdge(atoi(src.c_str()), atoi(dest.c_str()), atoi(weight.c_str()), adj);
     }
     inFile.close();
@@ -194,14 +219,16 @@ int main(int argc, char** argv) {
         int dest = atoi(tmpDest.c_str());
         int weight = atoi(tmpWeight.c_str());
 
-
         // Update the weight on the edge
-        if (weight == -999){
-            weight = LARGE_WEIGHT;
+        if (weight != -999){
+            // weight = LARGE_WEIGHT;
+            bool found = updateWeight(src, dest, weight, adj);
+            if (!found && weight != LARGE_WEIGHT){
+                createEdge(src, dest, weight, adj);
+            }
         }
-        bool found = updateWeight(src, dest, weight, adj);
-        if (!found && weight != LARGE_WEIGHT){
-            createEdge(src, dest, weight, adj);
+        else{
+            deleteEdge(src, dest, adj);
         }
 
         // Run Dijkstra's algorithm on each vertex
