@@ -1,3 +1,10 @@
+/* 
+ * File:   distvec.cpp
+ * Author: Kunle Li
+ *
+ * Created on Nov 6, 2022
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,10 +17,10 @@
 /**
  * @brief Create an edge
  * 
- * @param u Starting vertex
- * @param v Ending vertex
- * @param w Weight
- * @param adj Adjancency matrix
+ * @param u     Starting vertex
+ * @param v     Ending vertex
+ * @param w     Weight
+ * @param adj   Adjancency matrix
  */
 void createEdge(int u, int v, int w, vector<Pair> adj[]) {
     adj[u].push_back(make_pair(v, w));
@@ -23,9 +30,9 @@ void createEdge(int u, int v, int w, vector<Pair> adj[]) {
 /**
  * @brief Remove an edge
  * 
- * @param u Starting vertex
- * @param v Ending vertex
- * @param adj Adjancency matrix
+ * @param u     Starting vertex
+ * @param v     Ending vertex
+ * @param adj   Adjancency matrix
  */
 void deleteEdge(int u, int v, vector<Pair> adj[]) {
     for (int i = 0; i < adj[u].size(); i++) {
@@ -45,16 +52,16 @@ void deleteEdge(int u, int v, vector<Pair> adj[]) {
 /**
  * @brief Distance vector routing algorithm
  * 
- * @param vx    A pointer to the vertex
- * @param numVertices #vertices
- * @param adj   Adjancency matrix
+ * @param vx            A pointer to the vertex
+ * @param numVertices   #vertices
+ * @param adj           Adjancency matrix
  */
 void distanceVec(vertex* vx, int numVertices, vector<Pair> adj[]) {
     if (NULL == vx) {
         printf("Invalid vertex\n");
         return;
     }
-    // Must clear both vectors each time Distance vector routing is called
+    // Must clear both vectors each time Distance vector routing is called!!
     vx->dist.clear();
     vx->prev.clear();
     vx->dist.resize(numVertices + 1, INT_MAX);
@@ -79,10 +86,10 @@ void distanceVec(vertex* vx, int numVertices, vector<Pair> adj[]) {
 /**
  * @brief Find the shortest path from source to destination
  * 
- * @param src   Source vertex
- * @param dest  Destination vertex 
+ * @param src       Source vertex
+ * @param dest      Destination vertex 
  * @param vertices  A pointer to the vertices
- * @return vector<int> Path in the reversed order
+ * @return          vector<int> Path in the reversed order
  */
 vector<int> findPath(int src, int dest, vertex* vertices) {
     int nexthop = dest;
@@ -106,9 +113,9 @@ vector<int> findPath(int src, int dest, vertex* vertices) {
 /**
  * @brief Update the weight on the edge
  * 
- * @param u Starting vertex
- * @param v Ending vertex
- * @param w Weight
+ * @param u     Starting vertex
+ * @param v     Ending vertex
+ * @param w     Weight
  * @param adj   Adjancency matrix
  * @return true    If the edge exists
  * @return false   If the edge does not exist
@@ -135,9 +142,9 @@ bool updateWeight(int u, int v, int w, vector<Pair> adj[]) {
 /**
  * @brief Update and print the routing table
  * 
- * @param fpOut     A pointer to the output file
+ * @param fpOut         A pointer to the output file
  * @param numVertices   #vertices
- * @param vertices  A pointer to the vertices
+ * @param vertices      A pointer to the vertices
  */
 void printRoutingTable(FILE* fpOut, int numVertices, vertex* vertices) {
     for (int src = 1; src <= numVertices; ++src) {
@@ -154,8 +161,8 @@ void printRoutingTable(FILE* fpOut, int numVertices, vertex* vertices) {
 /**
  * @brief Print a line of the msg to the output file
  * 
- * @param fpOut    A pointer to the output file
- * @param line     One line from the messagefile
+ * @param fpOut     A pointer to the output file
+ * @param line      One line from the messagefile
  * @param vertices  A pointer to the vertices
  */
 void printOneLineMsg(FILE* fpOut, string line, vertex* vertices) {
