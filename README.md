@@ -1,8 +1,12 @@
 # ECE/CS 438 Fall 2022 MPs
 MP0: setup
+
 MP1: basic socket programming
+
 MP2: TCP-based protocol
+
 MP3: routing algorithms (Link State and Distance Vector)
+
 MP4: CSMA/CD
 
 ## Notice
