@@ -1,11 +1,16 @@
 # ECE/CS 438 Fall 2022 MPs
+Team: Kunle Li, Peiyuan Liu
+
+All our MPs received full mark.
+
+## Overview
 MP0: setup
 
-MP1: basic socket programming
+MP1: Basic socket programming
 
 MP2: TCP-based protocol
 
-MP3: routing algorithms (Link State and Distance Vector)
+MP3: Routing algorithms (Link State and Distance Vector)
 
 MP4: CSMA/CD
 
