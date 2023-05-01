@@ -1,4 +1,4 @@
-# ECE/CS 438 Fall 2022 MPs
+# ECE438/CS438 Fall 2022 MPs
 Team: Kunle Li, Peiyuan Liu
 
 All our MPs received full mark.
